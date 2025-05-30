@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework.Constraints;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -13,14 +14,17 @@ public class GameManager : MonoBehaviour
         Paused,     // 일시 정지
         GameOver    // 실패 또는 성공 종료
     }
-    public GameState currentState = GameState.StartUI;
+    public GameState currentState;
     public Text scoreText;
     private float score = 0;
     public GameObject sabersRight;           // 좌/우 컨트롤러
     public GameObject sabersLeft;           // 좌/우 컨트롤러
     public GameObject spawner;
     public GameObject gameplayUI;       // 플레이 중 UI
-    public GameObject startUI;          // 시작화면 UI
+    public AudioSource musicPlayer;
+    public Slider healthSlider;   // ← Inspector에서 연결
+    private float health = 100f;
+    private float currentHealth;
 
     void Awake()
     {
@@ -31,7 +35,20 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         UpdateScoreText();
-        SetGameState(GameState.StartUI);
+        SetStart();
+
+        currentHealth = health;              // ? 이 줄을 반드시 추가
+        healthSlider.value = currentHealth;
+        
+        if (SelectedSongHolder.selectedSong != null)
+        {
+            Debug.Log("선택된 곡: " + SelectedSongHolder.selectedSong.title);
+            Debug.Log("클립: " + SelectedSongHolder.selectedSong.previewClip);
+
+            musicPlayer.clip = SelectedSongHolder.selectedSong.previewClip;
+            musicPlayer.Play();
+        }
+
     }
 
     // 점수 관련 함수.
@@ -45,8 +62,23 @@ public class GameManager : MonoBehaviour
     {
         score -= 1;
         UpdateScoreText();
-    }
 
+        
+        DecreaseHealth(5f);
+        UpdateHealthUI();
+        
+    }
+    void DecreaseHealth(float amount)
+    {
+        currentHealth = currentHealth - amount;
+        healthSlider.value = currentHealth;
+
+        if (currentHealth <= 0f)
+        {
+            Debug.Log("Game Over!");
+            SetGameState(GameState.GameOver);
+        }
+    }
     void UpdateScoreText()
     {
         scoreText.text = "Score: " + score.ToString();
@@ -60,28 +92,20 @@ public class GameManager : MonoBehaviour
         switch (currentState)
         {
             case GameState.StartUI:
-                startUI.SetActive(true);
+
                 gameplayUI.SetActive(false);
                 sabersRight.SetActive(false);
                 sabersLeft.SetActive(false);
-                spawner.SetActive(false);
-                foreach (Transform child in spawner.transform)
-                {
-                    child.gameObject.SetActive(false);
-                }
+
                 Time.timeScale = 0f; // 일시정지
                 break;
 
             case GameState.Playing:
-                startUI.SetActive(false);
+
                 gameplayUI.SetActive(true);
                 sabersRight.SetActive(true);
                 sabersLeft.SetActive(true);
-                spawner.GetComponent<Spawner>().enabled = true;
-                foreach (Transform child in spawner.transform)
-                {
-                    child.gameObject.SetActive(true);
-                }
+
                 score = 0;
                 UpdateScoreText();
                 Time.timeScale = 1f;
@@ -92,6 +116,7 @@ public class GameManager : MonoBehaviour
                 break;
 
             case GameState.GameOver:
+                SceneManager.LoadScene("Start");
                 Time.timeScale = 0f;
                 break;
         }
@@ -99,5 +124,12 @@ public class GameManager : MonoBehaviour
     public void SetStart()
     {
         SetGameState(GameState.Playing);
+    }
+
+
+    private void UpdateHealthUI()
+    {
+        if (healthSlider != null)
+            healthSlider.value = health;
     }
 }
