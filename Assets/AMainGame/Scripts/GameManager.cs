@@ -9,22 +9,30 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
     public enum GameState
     {
-        StartUI,    // °ÔÀÓ ½ÃÀÛ Àü
-        Playing,    // ÇÃ·¹ÀÌ Áß
-        Paused,     // ÀÏ½Ã Á¤Áö
-        GameOver    // ½ÇÆÐ ¶Ç´Â ¼º°ø Á¾·á
+        StartUI,    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
+        Playing,    // ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½ï¿½
+        Paused,     // ï¿½Ï½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        GameOver    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
+
     public GameState currentState;
     public Text scoreText;
+    public Text comboText;
+    private int comboCount = 0;
     private float score = 0;
-    public GameObject sabersRight;           // ÁÂ/¿ì ÄÁÆ®·Ñ·¯
-    public GameObject sabersLeft;           // ÁÂ/¿ì ÄÁÆ®·Ñ·¯
+    public GameObject sabersRight;
+    public GameObject sabersLeft;
     public GameObject spawner;
-    public GameObject gameplayUI;       // ÇÃ·¹ÀÌ Áß UI
+    public GameObject gameplayUI;
     public AudioSource musicPlayer;
-    public Slider healthSlider;   // ¡ç Inspector¿¡¼­ ¿¬°á
+    public HealthBarController healthBar;
+    public GameObject pauseMenuUI;
+    public Slider volumeSlider;
+
     private float health = 100f;
-    private float currentHealth;
+    public AudioSource sfxPlayer;
+    public AudioClip hitSound;
+    
 
     void Awake()
     {
@@ -34,24 +42,47 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        UpdateScoreText();
+
         SetStart();
 
-        currentHealth = health;              // ? ÀÌ ÁÙÀ» ¹Ýµå½Ã Ãß°¡
-        healthSlider.value = currentHealth;
-        
+        if (healthBar != null)
+            healthBar.SetMaxHealth(health);
+
         if (SelectedSongHolder.selectedSong != null)
         {
-            Debug.Log("¼±ÅÃµÈ °î: " + SelectedSongHolder.selectedSong.title);
-            Debug.Log("Å¬¸³: " + SelectedSongHolder.selectedSong.previewClip);
+            Debug.Log("ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½: " + SelectedSongHolder.selectedSong.title);
+            Debug.Log("Å¬ï¿½ï¿½: " + SelectedSongHolder.selectedSong.previewClip);
 
             musicPlayer.clip = SelectedSongHolder.selectedSong.previewClip;
             musicPlayer.Play();
         }
 
     }
+    void UpdateComboText()
+    {
+        if (comboCount > 0)
+        {
+            comboText.text = "Combo : " + comboCount;
+            comboText.gameObject.SetActive(true);
+        }
+        else
+        {
+            comboText.text = "Combo : 0";
 
-    // Á¡¼ö °ü·Ã ÇÔ¼ö.
+        }
+    }
+    public void RegisterHit()
+    {
+        comboCount++;
+        UpdateComboText();
+    }
+
+    public void ResetCombo()
+    {
+        comboCount = 0;
+        UpdateComboText();
+    }
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½.
     public void AddScore(float amount)
     {
         score += amount;
@@ -62,29 +93,36 @@ public class GameManager : MonoBehaviour
     {
         score -= 1;
         UpdateScoreText();
-
-        
+        ResetCombo();
         DecreaseHealth(5f);
-        UpdateHealthUI();
-        
+
     }
     void DecreaseHealth(float amount)
     {
-        currentHealth = currentHealth - amount;
-        healthSlider.value = currentHealth;
+        health = Mathf.Clamp(health - amount, 0f, 100f);
+        healthBar.SetHealth(health);
 
-        if (currentHealth <= 0f)
+        if (health <= 0f)
         {
-            Debug.Log("Game Over!");
             SetGameState(GameState.GameOver);
         }
+    }
+    public void IncreaseHealth(float amount)
+    {
+        if (health <= 100)
+        {
+            health = Mathf.Clamp(health + amount, 0f, 100f);
+            healthBar.SetHealth(health);
+            Debug.Log("health UP" + amount);
+        }
+
     }
     void UpdateScoreText()
     {
         scoreText.text = "Score: " + score.ToString();
     }
 
-    // °ÔÀÓ »óÅÂ °ü¸®
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public void SetGameState(GameState newState)
     {
         currentState = newState;
@@ -94,10 +132,10 @@ public class GameManager : MonoBehaviour
             case GameState.StartUI:
 
                 gameplayUI.SetActive(false);
-                sabersRight.SetActive(false);
-                sabersLeft.SetActive(false);
+                // sabersRight.SetActive(false);
+                // sabersLeft.SetActive(false);
 
-                Time.timeScale = 0f; // ÀÏ½ÃÁ¤Áö
+                Time.timeScale = 0f; // ï¿½Ï½ï¿½ï¿½ï¿½ï¿½ï¿½
                 break;
 
             case GameState.Playing:
@@ -105,19 +143,30 @@ public class GameManager : MonoBehaviour
                 gameplayUI.SetActive(true);
                 sabersRight.SetActive(true);
                 sabersLeft.SetActive(true);
-
+                pauseMenuUI.SetActive(false);
                 score = 0;
+                health = 100f;
                 UpdateScoreText();
                 Time.timeScale = 1f;
+                if (!musicPlayer.isPlaying)
+                    musicPlayer.UnPause();
                 break;
 
             case GameState.Paused:
+                pauseMenuUI.SetActive(true);
                 Time.timeScale = 0f;
+                sabersRight.SetActive(true);
+                sabersLeft.SetActive(true);
+                musicPlayer.Pause();
+                if (sfxPlayer != null && hitSound != null)
+                {
+                    sfxPlayer.PlayOneShot(hitSound);
+                }
                 break;
 
             case GameState.GameOver:
-                SceneManager.LoadScene("Start");
-                Time.timeScale = 0f;
+                SceneManager.LoadScene("RealGameOver");
+                Time.timeScale = 1f;
                 break;
         }
     }
@@ -125,11 +174,32 @@ public class GameManager : MonoBehaviour
     {
         SetGameState(GameState.Playing);
     }
-
-
-    private void UpdateHealthUI()
+    public void TogglePause()
     {
-        if (healthSlider != null)
-            healthSlider.value = health;
+
+        if (currentState == GameState.Playing)
+        {
+            SetGameState(GameState.Paused);
+            pauseMenuUI.SetActive(true);
+
+            // ìŠ¬ë¼ì´ë” ì´ˆê¸°ê°’ì„ í˜„ìž¬ ë³¼ë¥¨ì— ë§žì¶¤
+            if (volumeSlider != null)
+                volumeSlider.value = musicPlayer.volume * 100f;
+        }
+        else if (currentState == GameState.Paused)
+        {
+            ResumeGame();
+        }
     }
+
+    public void ResumeGame()
+    {
+        SetGameState(GameState.Playing);
+        pauseMenuUI.SetActive(false);
+    }
+    public void OnVolumeChanged(float value)
+    {
+        musicPlayer.volume = value / 100f;
+    }
+
 }

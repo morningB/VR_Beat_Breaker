@@ -1,5 +1,12 @@
 using UnityEngine;
 
+public enum Difficulty
+{
+    Easy,
+    Normal,
+    Hard
+}
+
 [System.Serializable]
 public class SongData
 {

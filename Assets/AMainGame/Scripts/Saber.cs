@@ -7,14 +7,21 @@ public class Saber : MonoBehaviour
 {
     public LayerMask layer;
     Vector3 prevPos;
-    public Text precision;
+
     public Canvas canvas;
     public GameObject floatingTextPrefab;
+
+    public AudioSource sfxPlayer;          // Inspectorì— ë“±ë¡
+    public AudioClip perfectSFX;           // Inspectorì— ë“±ë¡
+
+
+    public GameObject perfectEffectPrefab; // Inspectorì— ë“±ë¡ (ParticleSystem ë“±)
+
     void Start()
     {
 
     }
-    
+
     void Update()
     {
         RaycastHit hit;
@@ -28,7 +35,11 @@ public class Saber : MonoBehaviour
                 // precision.text = "Perfect!!";
                 CreateHitEffect(hit.point, "Perfect!!");
                 GameManager.Instance.AddScore(3);
-                //ÀÌÆåÆ® Ãß°¡ÇÏ±â(hit.transform)À¸·Î
+                GameManager.Instance.IncreaseHealth(3);
+                GameManager.Instance.RegisterHit();
+
+                ListenMusic(hit);
+                //ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ß°ï¿½ï¿½Ï±ï¿½(hit.transform)ï¿½ï¿½ï¿½ï¿½
                 Destroy(hit.transform.gameObject);
             }
             else if (angle > 130)
@@ -37,27 +48,32 @@ public class Saber : MonoBehaviour
                 // precision.text = "Good!";
                 GameManager.Instance.AddScore(1);
                 CreateHitEffect(hit.point, "Good");
-                //ÀÌÆåÆ® Ãß°¡ÇÏ±â(hit.transform)À¸·Î
+                GameManager.Instance.IncreaseHealth(1);
+                GameManager.Instance.RegisterHit();
+                ListenMusic(hit);
+                //ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ß°ï¿½ï¿½Ï±ï¿½(hit.transform)ï¿½ï¿½ï¿½ï¿½
                 Destroy(hit.transform.gameObject);
             }
+
         }
+
         prevPos = transform.position;
 
     }
     public void CreateHitEffect(Vector3 hitPoint, string message)
     {
         GameObject textObj = Instantiate(floatingTextPrefab, canvas.transform);
-        
-        // Canvas°¡ World SpaceÀÏ °æ¿ì: localPosition »ç¿ë
+
+        // Canvasï¿½ï¿½ World Spaceï¿½ï¿½ ï¿½ï¿½ï¿½: localPosition ï¿½ï¿½ï¿½
         textObj.GetComponent<RectTransform>().localPosition =
             canvas.transform.InverseTransformPoint(hitPoint + new Vector3(0, 0.2f, 0));
 
-        // Ä«¸Ş¶ó Á¤¸éÀ» ¹Ù¶óº¸°Ô È¸Àü
+        // Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶óº¸°ï¿½ È¸ï¿½ï¿½
         textObj.transform.LookAt(Camera.main.transform);
         textObj.transform.Rotate(0, 180, 0);
 
-        // ÅØ½ºÆ® ¼³Á¤
-        Text text = textObj.GetComponent<Text>(); // ¶Ç´Â TMP_Text
+        // ï¿½Ø½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
+        Text text = textObj.GetComponent<Text>(); // ï¿½Ç´ï¿½ TMP_Text
         text.text = message;
         if (message == "Good")
         {
@@ -70,6 +86,16 @@ public class Saber : MonoBehaviour
 
         Destroy(textObj, 1.5f);
     }
+    private void ListenMusic(RaycastHit hit)
+    {
+        if (sfxPlayer != null && perfectSFX != null)
+        sfxPlayer.PlayOneShot(perfectSFX);
 
+        if (perfectEffectPrefab != null)
+        {
+            GameObject vfx = Instantiate(perfectEffectPrefab, hit.point, Quaternion.identity);
+            Destroy(vfx, 1.5f); // ìë™ ì œê±°
+        }
 
+    }
 }

@@ -5,57 +5,104 @@ using UnityEngine.UI;
 
 public class SongSelector : MonoBehaviour
 {
-    public List<SongData> songs;  // Inspector¿¡¼­ °î Á¤º¸ ¸®½ºÆ® ¿¬°á
+    public List<SongData> songs;  // Inspectorï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     public Image centerImage;
     public Image leftImage;
     public Image rightImage;
+    public Button easy;
+    public Button normal;
+    public Button hard;
 
     public Text titleText;
     public Text artistText;
     private int currentIndex = 0;
-    public AudioSource previewPlayer; // Inspector¿¡ AudioSource ¿¬°á
+    public AudioSource previewPlayer; // Inspectorï¿½ï¿½ AudioSource ï¿½ï¿½ï¿½ï¿½
 
+    public AudioSource sfxPlayer; // Inspectorï¿½ï¿½ AudioSource ï¿½ï¿½ï¿½ï¿½
+    public AudioClip nextAudio;
+    public GameObject hitEffect;
     void Start()
     {
         UpdateUI();
 
 
     }
+    public void SetDifficultyEasy()
+    {
+        sfxPlayer.PlayOneShot(nextAudio);
+        SpawnEffectAtButton(GameObject.Find("Easy").GetComponent<Button>());
+        SelectedSongHolder.selectedDifficulty = Difficulty.Easy;
+        UpdateDifficultyVisuals();
+    }
 
+    public void SetDifficultyNormal()
+    {
+        sfxPlayer.PlayOneShot(nextAudio);
+        SpawnEffectAtButton(GameObject.Find("Normal").GetComponent<Button>());
+        SelectedSongHolder.selectedDifficulty = Difficulty.Normal;
+        UpdateDifficultyVisuals();
+    }
+
+    public void SetDifficultyHard()
+    {
+        sfxPlayer.PlayOneShot(nextAudio);
+        SpawnEffectAtButton(GameObject.Find("Hard").GetComponent<Button>());
+        SelectedSongHolder.selectedDifficulty = Difficulty.Hard;
+        UpdateDifficultyVisuals();
+    }
+    private void UpdateDifficultyVisuals()
+    {
+        Color selectedColor = new Color(1f, 1f, 1f, 1f); // ê°•ì¡° ìƒ‰ìƒ (ì˜ˆ: ì£¼í™©)
+        Color normalColor = new Color(1f, 1f, 1f, 0f);  // ê¸°ë³¸ ìƒ‰ìƒ
+
+        // ë²„íŠ¼ ë°°ê²½ ë˜ëŠ” í…ìŠ¤íŠ¸ ê°•ì¡°
+        HighlightButton(easy, SelectedSongHolder.selectedDifficulty == Difficulty.Easy ? selectedColor : normalColor);
+        HighlightButton(normal, SelectedSongHolder.selectedDifficulty == Difficulty.Normal ? selectedColor : normalColor);
+        HighlightButton(hard, SelectedSongHolder.selectedDifficulty == Difficulty.Hard ? selectedColor : normalColor);
+    }
+
+    private void HighlightButton(Button btn, Color color)
+    {
+        Image bg = btn.GetComponent<Image>();
+        if (bg != null) bg.color = color;
+    }
     public void NextSong()
     {
+        sfxPlayer.PlayOneShot(nextAudio);
         currentIndex = (currentIndex + 1) % songs.Count;
+        SpawnEffectAtButton(GameObject.Find("Next").GetComponent<Button>());
         UpdateUI();
     }
 
     public void PreviousSong()
     {
+        sfxPlayer.PlayOneShot(nextAudio);
         currentIndex = (currentIndex - 1 + songs.Count) % songs.Count;
+        SpawnEffectAtButton(GameObject.Find("Previous").GetComponent<Button>());
         UpdateUI();
     }
     public void ConfirmSongSelection()
     {
 
-        // ¼±ÅÃµÈ °î Á¤º¸¸¦ Àü¿ªÀ¸·Î ³Ñ±ä´Ù
+        // ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ±ï¿½ï¿½
         SelectedSongHolder.selectedSong = songs[currentIndex];
-        Debug.Log("MainÀ¸·Î °£´Ù!!!!" + " °îÀº : " + SelectedSongHolder.selectedSong.ToString());
+        Debug.Log("Mainï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!!!!" + " ï¿½ï¿½ï¿½ï¿½ : " + SelectedSongHolder.selectedSong.ToString());
 
-        // ¾À ÀüÈ¯ ¶Ç´Â »óÅÂ º¯°æ
+        // ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         SceneManager.LoadScene("MainGame");
 
     }
-
     void UpdateUI()
     {
         int prevIndex = (currentIndex - 1 + songs.Count) % songs.Count;
         int nextIndex = (currentIndex + 1) % songs.Count;
 
         SongData current = songs[currentIndex];
-        // ÀÌ¹ÌÁö ¼³Á¤
+        // ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         centerImage.sprite = current.jacketImage;
         leftImage.sprite = songs[prevIndex].jacketImage;
         rightImage.sprite = songs[nextIndex].jacketImage;
-        // ¼±ÅÃ °î Á¤º¸
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         titleText.text = current.title;
         artistText.text = current.artist;
 
@@ -73,10 +120,23 @@ public class SongSelector : MonoBehaviour
 
         if (previewPlayer.isPlaying)
         {
-            previewPlayer.Stop(); // ÀÌÀü °î Á¤Áö
+            previewPlayer.Stop(); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
         previewPlayer.clip = current.previewClip;
         previewPlayer.Play();
     }
+    private void SpawnEffectAtButton(Button button)
+    {
+        // ë²„íŠ¼ ìœ„ì¹˜ ê¸°ì¤€ìœ¼ë¡œ ì›”ë“œ ì¢Œí‘œ ê³„ì‚°
+        Vector3 spawnPos = button.transform.position;
+
+        // ìº”ë²„ìŠ¤ê°€ World Spaceë¼ë©´ ì´ê±¸ ê·¸ëŒ€ë¡œ ì‚¬ìš©
+        // ê·¸ë ‡ì§€ ì•Šìœ¼ë©´ Camera ê¸°ì¤€ìœ¼ë¡œ ë³´ì • í•„ìš”
+        GameObject effect = Instantiate(hitEffect, spawnPos, Quaternion.identity, button.transform);
+
+        // ì´í™íŠ¸ëŠ” ì ê¹ í›„ì— ì‚­ì œ
+        Destroy(effect, 1.5f);
+    }
+
 }
