@@ -4,7 +4,8 @@ public class Spawner : MonoBehaviour
 {
     public GameObject[] cubes;
     public Transform[] points;
-    float beat = 1;
+    float beat;
+    float beatfloat;
     float timer;
     int count;
     int cubeCount;
@@ -13,17 +14,17 @@ public class Spawner : MonoBehaviour
         switch (SelectedSongHolder.selectedDifficulty)
         {
             case Difficulty.Easy:
-                beat = 3f;
+                beatfloat = 2f;
                 count = 2;
                 cubeCount = 2;
                 break;
             case Difficulty.Normal:
-                beat = 2f;
+                beatfloat = 11f;
                 count = 4;
                 cubeCount = 2;
                 break;
             case Difficulty.Hard:
-                beat = 1.5f;
+                beatfloat = 0.5f;
                 count = 8;
                 cubeCount = 4;
                 break;
@@ -31,10 +32,11 @@ public class Spawner : MonoBehaviour
     }
     void Update()
     {
-        beat = Random.Range(0.3f, beat);
+        
         
         if (timer > beat)
         {
+            beat = Random.Range(0.3f, beatfloat);
             // ť���� ���� �ε���, ť�� ��� ��Ʈ���� �ε���
             GameObject cube = Instantiate(cubes[Random.Range(0, cubeCount)], points[Random.Range(0, count)]);
             cube.transform.localPosition = Vector3.zero; // �ڱ� �߽������� �Ѵ�.

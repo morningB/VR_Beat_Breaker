@@ -66,5 +66,5 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "VR_Beat_Breaker.sln"
+    "dotnet.defaultSolution": "VR_BeatBreaker.sln"
 }
