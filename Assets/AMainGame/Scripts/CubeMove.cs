@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class CubeMove : MonoBehaviour
 {
+    void Awake()
+    {
+        Application.targetFrameRate = 60;
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -18,8 +22,8 @@ public class CubeMove : MonoBehaviour
         if (other.CompareTag("Deadzone"))
         {
             Debug.Log("Miss!");
-            GameManager.Instance.MissCube();  // Á¡¼ö Â÷°¨ µî
-            Destroy(gameObject);             // Å¥ºê Á¦°Å
+            GameManager.Instance.MissCube();  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
+            Destroy(gameObject);             // Å¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
     }
 }
